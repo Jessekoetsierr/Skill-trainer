@@ -72,6 +72,8 @@ header.top { display: flex; align-items: center; justify-content: space-between;
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .dot.ok { background: var(--good); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
 button.chip { cursor: pointer; }
+.chip.install { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip.install b { color: var(--accent-ink); }
 
 /* Setup */
 .setup { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 28px; align-items: start; }
@@ -278,6 +280,7 @@ details.tx .lines b { font-weight: 600; }
     <div class="chips">
       <span class="chip" id="brainChip"><span class="dot warn"></span><span>AI: <b>verbinden…</b></span></span>
       <span class="chip" id="micChip"><span class="dot"></span><span>Spraak: <b>–</b></span></span>
+      <button class="chip install" id="installBtn" type="button" hidden><span>⤓</span><b>Installeer als app</b></button>
       <button class="chip" id="voiceToggle" type="button" aria-pressed="true"><span class="dot ok"></span><span>Stem klant: <b>aan</b></span></button>
     </div>
   </header>
@@ -1216,6 +1219,17 @@ function updateMicChip() {
   if (Ears.supported) c.innerHTML = '<span class="dot ok"></span><span>Jij: <b>handsfree praten</b></span>';
   else c.innerHTML = '<span class="dot warn"></span><span>Jij: <b>typen of dicteren</b></span>';
 }
+
+/* ---------- Install as app (local version, Edge/Chrome) ---------- */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
+window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; toast('Tegenspeler staat nu als app op je computer'); });
+$('#installBtn').addEventListener('click', async () => {
+  if (!installEvt) return;
+  installEvt.prompt();
+  try { await installEvt.userChoice; } catch {}
+  installEvt = null; $('#installBtn').hidden = true;
+});
 
 /* ---------- Boot ---------- */
 (async function boot() {

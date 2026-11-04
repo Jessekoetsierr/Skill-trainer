@@ -11,7 +11,7 @@
 
 import http from 'node:http';
 import { spawn } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -28,19 +28,38 @@ const MODELS = {
 const SYSTEM = 'Je bent de AI-motor van een salestrainingsapp. Volg de instructies in het bericht precies op en antwoord alleen met wat er gevraagd wordt, zonder inleiding of uitleg.';
 
 // The page is written as an artifact body; give it a proper document shell here.
-const SHELL_HEAD = '<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>';
+const SHELL_HEAD = '<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
+  '<link rel="manifest" href="/app/manifest.webmanifest"><meta name="theme-color" content="#0d1022"><link rel="icon" href="/app/icon-192.png"><link rel="apple-touch-icon" href="/app/icon-192.png">' +
+  '<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>';
 const SHELL_FOOT = '</body></html>';
+
+const STATIC = {
+  '/app/manifest.webmanifest': 'application/manifest+json',
+  '/sw.js': 'text/javascript; charset=utf-8',
+  '/app/icon-192.png': 'image/png',
+  '/app/icon-512.png': 'image/png',
+  '/app/icon-maskable.png': 'image/png'
+};
+
+// The system prompt goes through a file, so no shell quoting is needed on Windows.
+const SYSTEM_FILE = path.join(tmpdir(), 'tegenspeler-system.txt');
+await writeFile(SYSTEM_FILE, SYSTEM, 'utf8');
+const IS_WIN = process.platform === 'win32';
+const winQuote = a => a === '' ? '""' : /[\s"&|<>^()%!]/.test(a) ? '"' + a.replace(/"/g, '""') + '"' : a;
 
 function askClaude(prompt, tier, res, req) {
   const args = [
     '-p', '--output-format', 'stream-json', '--verbose', '--include-partial-messages',
     '--tools', '', '--strict-mcp-config', '--setting-sources', '', '--no-session-persistence',
-    '--system-prompt', SYSTEM
+    '--system-prompt-file', SYSTEM_FILE
   ];
   const model = MODELS[tier] || MODELS.default;
   if (model) args.push('--model', model);
 
-  const child = spawn(CLAUDE_BIN, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
+  // On Windows `claude` can be a .cmd shim, which Node only starts through the shell.
+  const child = IS_WIN
+    ? spawn([CLAUDE_BIN, ...args].map(winQuote).join(' '), { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'], shell: true, windowsHide: true })
+    : spawn(CLAUDE_BIN, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
   let streamed = false, buf = '', errText = '', finished = false;
   const finish = (err) => {
     if (finished) return; finished = true;
@@ -99,6 +118,11 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(SHELL_HEAD + body + SHELL_FOOT);
     }
+    if (req.method === 'GET' && STATIC[req.url]) {
+      const body = await readFile(path.join(ROOT, req.url === '/sw.js' ? 'app/sw.js' : req.url.slice(1)));
+      res.writeHead(200, { 'content-type': STATIC[req.url], 'cache-control': 'no-cache' });
+      return res.end(body);
+    }
     if (req.method === 'GET' && req.url === '/api/health') {
       res.writeHead(200, { 'content-type': 'application/json' });
       return res.end(JSON.stringify({ ok: true, mode: MOCK ? 'mock' : 'claude' }));
@@ -123,6 +147,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log(`\n  Tegenspeler draait op http://localhost:${PORT}${MOCK ? '  (testmodus)' : ''}`);
-  console.log('  Open de link in Chrome of Edge en geef toegang tot je microfoon.\n');
+  console.log(`\n  Tegenspeler draait op http://127.0.0.1:${PORT}${MOCK ? '  (testmodus)' : ''}`);
+  console.log('  Open de link in Edge of Chrome en geef toegang tot je microfoon.');
+  console.log('  Tip: klik in de adresbalk op "App installeren" voor een eigen venster en icoon.\n');
 });
