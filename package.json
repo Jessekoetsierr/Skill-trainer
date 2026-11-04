@@ -1,12 +1,35 @@
 {
   "name": "tegenspeler",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Oefen salesgesprekken met een AI-klant die hardop terugpraat.",
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
-    "test-mode": "TRAINER_MOCK=1 node server.mjs"
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && node scripts/make-artifact.mjs",
+    "start": "vite build && node server.mjs",
+    "serve": "node server.mjs",
+    "test-mode": "vite build && TRAINER_MOCK=1 node server.mjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "coachman-ui": "file:coachman-ui",
+    "lucide-react": "^1.68.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.8.3",
+    "vite": "^6.4.5",
+    "vite-plugin-singlefile": "^2.3.0"
+  }
 }

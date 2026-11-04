@@ -27,11 +27,10 @@ const MODELS = {
 };
 const SYSTEM = 'Je bent de AI-motor van een salestrainingsapp. Volg de instructies in het bericht precies op en antwoord alleen met wat er gevraagd wordt, zonder inleiding of uitleg.';
 
-// The page is written as an artifact body; give it a proper document shell here.
-const SHELL_HEAD = '<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">' +
-  '<link rel="manifest" href="/app/manifest.webmanifest"><meta name="theme-color" content="#0d1022"><link rel="icon" href="/app/icon-192.png"><link rel="apple-touch-icon" href="/app/icon-192.png">' +
-  '<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>';
-const SHELL_FOOT = '</body></html>';
+// The built app (npm run build → dist/index.html) gets the install-as-app tags here,
+// so the artifact version stays free of them.
+const PWA_TAGS = '<link rel="manifest" href="/app/manifest.webmanifest"><meta name="theme-color" content="#0c0b0a"><link rel="icon" href="/app/icon-192.png"><link rel="apple-touch-icon" href="/app/icon-192.png">' +
+  '<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script>';
 
 const STATIC = {
   '/app/manifest.webmanifest': 'application/manifest+json',
@@ -114,9 +113,11 @@ function mockAnswer(prompt) {
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?') || req.url === '/index.html')) {
-      const body = await readFile(path.join(ROOT, 'index.html'), 'utf8');
+      let body;
+      try { body = await readFile(path.join(ROOT, 'dist', 'index.html'), 'utf8'); }
+      catch { res.writeHead(503, { 'content-type': 'text/plain; charset=utf-8' }); return res.end('De app is nog niet gebouwd. Voer eerst  npm run build  uit.'); }
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
-      return res.end(SHELL_HEAD + body + SHELL_FOOT);
+      return res.end(body.replace('</head>', PWA_TAGS + '</head>'));
     }
     if (req.method === 'GET' && STATIC[req.url]) {
       const body = await readFile(path.join(ROOT, req.url === '/sw.js' ? 'app/sw.js' : req.url.slice(1)));

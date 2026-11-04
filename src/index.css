@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { min-height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); }
+
+/* Ring around the customer in a call: breathes with the voice (--lvl, 0..1). */
+.cm-presence {
+  --lvl: 0;
+  box-shadow: 0 0 0 var(--border-width) var(--line);
+  transform: scale(calc(1 + var(--lvl) * 0.06));
+  transition: box-shadow var(--dur-base) var(--ease);
+}
+.cm-presence[data-phase="speaking"] { box-shadow: 0 0 0 calc(var(--border-width) * 2) var(--accent), var(--accent-glow); }
+.cm-presence[data-phase="listening"] { animation: cm-listen 1800ms var(--ease) infinite; }
+@keyframes cm-listen {
+  0% { box-shadow: 0 0 0 0 var(--line), 0 0 0 var(--border-width) var(--text-muted); }
+  100% { box-shadow: 0 0 0 var(--s-3) transparent, 0 0 0 var(--border-width) var(--text-muted); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-presence { transform: none; }
+  .cm-presence[data-phase="listening"] { animation: none; }
+}
