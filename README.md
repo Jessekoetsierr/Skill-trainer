@@ -30,18 +30,23 @@ De eerste keer vraagt Edge om toegang tot je microfoon. Kies **Toestaan**.
 ### Voor ontwikkelaars
 
 ```bash
-npm start              # app op http://127.0.0.1:5173
+npm install
+npm start              # bouwt en start de app op http://127.0.0.1:5173
+npm run dev            # ontwikkelen met hot reload (start daarnaast  npm run serve  voor de AI)
+npm run build          # dist/index.html + dist/artifact.html (voor claude.ai)
 npm run test-mode      # nep-antwoorden, geen AI-gebruik
 TRAINER_MODEL_QUICK=haiku npm start   # klant reageert sneller
 ```
 
 ## Opbouw
 
-- `index.html` is de hele app. Hij draait als Claude-artifact en wordt ook lokaal geserveerd.
+- De interface is gebouwd met de eigen UI-kit in `coachman-ui/` (React 19 + Tailwind v3). De regels staan in `CLAUDE.md`.
+- `src/App.tsx` bevat de AppShell en navigatie, `src/pages/` de schermen, `src/lib/` de logica (AI, spraak, prompts).
+- De build levert één bestand met alles erin, ook de fonts. Dat draait lokaal én als Claude-artifact.
 - `app/` bevat het app-icoon, het manifest en de service worker, zodat je hem kunt installeren.
 - `Start Tegenspeler.bat` start alles met een dubbelklik op Windows.
 - `server.mjs` is de lokale server. Hij stuurt AI-verzoeken naar de Claude Code CLI en levert het antwoord als stream terug.
-- In `index.html` regelt het object `Brain` alle AI-aanroepen. Voor een betaalde versie vervang je alleen die laag door een server die de Claude API aanroept, met login en betaling ervoor.
+- `src/lib/brain.ts` regelt alle AI-aanroepen. Voor een betaalde versie vervang je alleen die laag door een server die de Claude API aanroept, met login en betaling ervoor.
 
 ## Stemmen
 
