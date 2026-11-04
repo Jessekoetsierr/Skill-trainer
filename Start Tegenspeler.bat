@@ -26,6 +26,6 @@ if errorlevel 1 (
 echo.
 echo  Tegenspeler start... Laat dit venster open zolang je oefent.
 echo.
-start "" cmd /c "timeout /t 2 /nobreak >nul & start msedge --app=http://127.0.0.1:5173 || start http://127.0.0.1:5173"
+start "" cmd /c "timeout /t 2 /nobreak >nul & start msedge http://127.0.0.1:5173"
 node server.mjs
 pause
