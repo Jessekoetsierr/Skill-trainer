@@ -23,6 +23,14 @@ if errorlevel 1 (
   exit /b
 )
 
+if not exist "dist\index.html" (
+  echo.
+  echo  De app ontbreekt in deze map ^(dist\index.html^). Download de ZIP opnieuw van GitHub.
+  echo.
+  pause
+  exit /b
+)
+
 echo.
 echo  Tegenspeler start... Laat dit venster open zolang je oefent.
 echo.
