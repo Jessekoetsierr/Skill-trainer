@@ -12,6 +12,7 @@
 import http from 'node:http';
 import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -19,7 +20,7 @@ import path from 'node:path';
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT) || 5173;
 const MOCK = process.env.TRAINER_MOCK === '1';
-const CLAUDE_BIN = process.env.CLAUDE_BIN || 'claude';
+
 const MODELS = {
   quick: process.env.TRAINER_MODEL_QUICK || '',
   default: process.env.TRAINER_MODEL_DEFAULT || '',
@@ -44,6 +45,26 @@ const STATIC = {
 const SYSTEM_FILE = path.join(tmpdir(), 'tegenspeler-system.txt');
 await writeFile(SYSTEM_FILE, SYSTEM, 'utf8');
 const IS_WIN = process.platform === 'win32';
+
+// Find the Claude Code CLI ourselves: right after installing, Windows often
+// has not updated PATH for programs started from Explorer yet.
+function findClaude() {
+  if (process.env.CLAUDE_BIN) return { bin: process.env.CLAUDE_BIN, shell: false };
+  const home = process.env.USERPROFILE || process.env.HOME || '';
+  const dirs = [
+    ...(process.env.PATH || '').split(path.delimiter),
+    path.join(home, '.local', 'bin'),
+    path.join(home, '.claude', 'local'),
+    process.env.APPDATA ? path.join(process.env.APPDATA, 'npm') : '',
+  ].filter(Boolean);
+  const names = IS_WIN ? ['claude.exe', 'claude.cmd'] : ['claude'];
+  for (const name of names) for (const d of dirs) {
+    const f = path.join(d, name);
+    if (existsSync(f)) return { bin: f, shell: name.endsWith('.cmd') };
+  }
+  return null;
+}
+const CLAUDE = findClaude();
 const winQuote = a => a === '' ? '""' : /[\s"&|<>^()%!]/.test(a) ? '"' + a.replace(/"/g, '""') + '"' : a;
 
 function askClaude(prompt, tier, res, req) {
@@ -56,9 +77,11 @@ function askClaude(prompt, tier, res, req) {
   if (model) args.push('--model', model);
 
   // On Windows `claude` can be a .cmd shim, which Node only starts through the shell.
-  const child = IS_WIN
-    ? spawn([CLAUDE_BIN, ...args].map(winQuote).join(' '), { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'], shell: true, windowsHide: true })
-    : spawn(CLAUDE_BIN, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'] });
+  if (!CLAUDE) { res.write('\u0000ERROR:Claude Code is niet gevonden op deze computer.'); return res.end(); }
+  // A .cmd shim can only be started through the shell; an .exe starts directly.
+  const child = CLAUDE.shell
+    ? spawn([CLAUDE.bin, ...args].map(winQuote).join(' '), { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'], shell: true, windowsHide: true })
+    : spawn(CLAUDE.bin, args, { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
   let streamed = false, buf = '', errText = '', finished = false;
   const finish = (err) => {
     if (finished) return; finished = true;
@@ -126,7 +149,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && req.url === '/api/health') {
       res.writeHead(200, { 'content-type': 'application/json' });
-      return res.end(JSON.stringify({ ok: true, mode: MOCK ? 'mock' : 'claude' }));
+      return res.end(JSON.stringify({ ok: true, mode: MOCK ? 'mock' : 'claude', claude: SELFTEST }));
     }
     if (req.method === 'POST' && req.url === '/api/ask') {
       let raw = ''; for await (const c of req) { raw += c; if (raw.length > 400_000) throw new Error('Verzoek te groot'); }
@@ -147,8 +170,38 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+// Self-test at start: is Claude Code there, and are you logged in?
+let SELFTEST = MOCK ? 'ok' : 'bezig';
+function selfTest() {
+  if (MOCK) return;
+  if (!CLAUDE) {
+    SELFTEST = 'ontbreekt';
+    console.log('  [X] Claude Code is niet gevonden.');
+    console.log('      Open PowerShell en voer uit:  irm https://claude.ai/install.ps1 | iex');
+    console.log('      Typ daarna  claude  en log in. Start dit bestand dan opnieuw.\n');
+    return;
+  }
+  console.log('  ... Claude Code testen (' + CLAUDE.bin + ')');
+  const chunks = [];
+  const fake = { write: c => chunks.push(String(c)), end: () => {
+    const out = chunks.join('');
+    const err = out.includes('\u0000ERROR:') ? out.split('\u0000ERROR:')[1] : '';
+    if (!err && out.trim()) { SELFTEST = 'ok'; console.log('  [OK] Claude Code werkt en je bent ingelogd. Je kunt oefenen!\n'); }
+    else {
+      SELFTEST = 'fout';
+      console.log('  [X] Claude Code gaf een fout: ' + (err || 'leeg antwoord'));
+      console.log('      Open PowerShell, typ  claude  en log in met je Claude-account. Start dit bestand dan opnieuw.\n');
+    }
+  } };
+  askClaude('Antwoord met alleen het woord: ok', 'quick', fake, { on() {} });
+}
+
+server.on('error', e => {
+  if (e.code === 'EADDRINUSE') console.log(`\n  [X] Poort ${PORT} is al in gebruik. Draait Tegenspeler al in een ander zwart venster? Sluit dat eerst.\n`);
+  else console.log('\n  [X] De server kon niet starten: ' + e.message + '\n');
+});
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`\n  Tegenspeler draait op http://127.0.0.1:${PORT}${MOCK ? '  (testmodus)' : ''}`);
-  console.log('  Open de link in Edge of Chrome en geef toegang tot je microfoon.');
-  console.log('  Tip: klik in de adresbalk op "App installeren" voor een eigen venster en icoon.\n');
+  console.log('  Laat dit venster open zolang je oefent.\n');
+  selfTest();
 });

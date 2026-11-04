@@ -1,6 +1,6 @@
 import { Avatar, Button, Card, DashboardPage, DayHeader, Log, LogEntry, RadioGroup, Tag, type StatProps } from "coachman-ui";
 import { Check, Phone, PenLine, Search, ShieldQuestion } from "lucide-react";
-import type { BrainMode } from "../lib/brain";
+import { Brain, type BrainMode } from "../lib/brain";
 import { LEVELS, PERSONAS, SCENARIOS, type Company } from "../lib/content";
 import { firstName } from "../lib/prompts";
 import { history } from "../lib/store";
@@ -64,6 +64,16 @@ export function TrainPage({ sel, onSel, brain, company, onStart, onGo }: {
         ) : undefined
       }
     >
+      {brain === "local" && (Brain.cli === "ontbreekt" || Brain.cli === "fout") && (
+        <Card variant="inset" className="col-span-full border-danger">
+          <p className="text-body font-medium text-danger">{Brain.cli === "ontbreekt" ? "Claude Code is niet gevonden op deze computer." : "Claude Code werkt nog niet: je bent waarschijnlijk niet ingelogd."}</p>
+          <p className="mt-s-1 text-small text-muted">
+            Open PowerShell en voer {Brain.cli === "ontbreekt" ? <><span className="font-mono text-mono">irm https://claude.ai/install.ps1 | iex</span> uit, typ daarna </> : "uit: "}
+            <span className="font-mono text-mono">claude</span> en log in. Sluit het zwarte venster en start Tegenspeler opnieuw.
+          </p>
+        </Card>
+      )}
+
       <Card className="col-span-full">
         <SectionTitle n="1" title="Kies de situatie" />
         <div className="grid grid-cols-1 gap-s-3 sm:grid-cols-2 xl:grid-cols-4">

@@ -26,6 +26,8 @@ export function parseJsonLoose(text: string): unknown {
 class BrainImpl {
   mode: BrainMode = null;
   mock = false;
+  /** Local server: result of its Claude Code self-test (ok, bezig, ontbreekt, fout). */
+  cli = "ok";
   private sample: SampleFn | null = null;
 
   async detect(): Promise<BrainMode> {
@@ -39,7 +41,7 @@ class BrainImpl {
         const r = await fetch("/api/health", { cache: "no-store" });
         if (r.ok) {
           const j = await r.json();
-          if (j?.ok) { this.mode = "local"; this.mock = j.mode === "mock"; return this.mode; }
+          if (j?.ok) { this.mode = "local"; this.mock = j.mode === "mock"; this.cli = j.claude ?? "ok"; return this.mode; }
         }
       } catch { /* no local server */ }
     }
