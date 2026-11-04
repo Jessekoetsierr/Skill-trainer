@@ -29,7 +29,7 @@ const SYSTEM = 'Je bent de AI-motor van een salestrainingsapp. Volg de instructi
 
 // The built app (npm run build → dist/index.html) gets the install-as-app tags here,
 // so the artifact version stays free of them.
-const PWA_TAGS = '<link rel="manifest" href="/app/manifest.webmanifest"><meta name="theme-color" content="#0c0b0a"><link rel="icon" href="/app/icon-192.png"><link rel="apple-touch-icon" href="/app/icon-192.png">' +
+const PWA_TAGS = '<link rel="manifest" href="/app/manifest.webmanifest"><meta name="theme-color" content="#f5f2ec" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#0c0b0a" media="(prefers-color-scheme: dark)"><link rel="icon" href="/app/icon-192.png"><link rel="apple-touch-icon" href="/app/icon-192.png">' +
   '<script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script>';
 
 const STATIC = {

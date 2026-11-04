@@ -1,6 +1,6 @@
 // Keeps the app shell available so the installed app opens instantly.
 // AI requests (/api/*) always go to the network.
-const CACHE = 'tegenspeler-v1';
+const CACHE = 'tegenspeler-v2';
 const SHELL = ['/', '/app/manifest.webmanifest', '/app/icon-192.png', '/app/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
