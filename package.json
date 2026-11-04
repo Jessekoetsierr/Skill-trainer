@@ -1,0 +1,12 @@
+{
+  "name": "tegenspeler",
+  "version": "0.1.0",
+  "description": "Oefen salesgesprekken met een AI-klant die hardop terugpraat.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test-mode": "TRAINER_MOCK=1 node server.mjs"
+  },
+  "engines": { "node": ">=18" }
+}

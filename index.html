@@ -1,0 +1,1232 @@
+<title>Tegenspeler</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one app, three rooms. Setup is a two-column brief (exercise left, your company right),
+   the call is a dark "studio" stage with the customer as a living orb, the result is a coach's scorecard. */
+:root {
+  --bg: #f2f3f7;
+  --surface: #ffffff;
+  --surface-2: #e9ebf2;
+  --ink: #121528;
+  --muted: #5a5f77;
+  --line: #dcdfe9;
+  --accent: #2f45e0;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3e7ff;
+  --good: #16865a;
+  --warn: #b97a06;
+  --bad: #c9372e;
+  /* The call stage is a studio: dark in both themes, on purpose. */
+  --stage: #0d1022;
+  --stage-2: #161a33;
+  --stage-line: #262b4d;
+  --stage-fg: #eef0fb;
+  --stage-muted: #9298bd;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Instrument Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0d19; --surface: #141728; --surface-2: #1c2036; --ink: #e8eaf6; --muted: #9aa0bf;
+    --line: #262a44; --accent: #8292ff; --accent-ink: #0b0d19; --accent-soft: #1f2550;
+    --good: #3fcf8e; --warn: #e8b23f; --bad: #f2736a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0d19; --surface: #141728; --surface-2: #1c2036; --ink: #e8eaf6; --muted: #9aa0bf;
+  --line: #262a44; --accent: #8292ff; --accent-ink: #0b0d19; --accent-soft: #1f2550;
+  --good: #3fcf8e; --warn: #e8b23f; --bad: #f2736a; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* Header */
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 22px 18px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.mark { width: 38px; height: 38px; position: relative; flex: none; }
+.mark i { position: absolute; width: 26px; height: 26px; border-radius: 50% 50% 50% 4px; }
+.mark i:first-child { left: 0; top: 0; background: var(--accent); }
+.mark i:last-child { right: 0; bottom: 0; background: var(--ink); border-radius: 50% 50% 4px 50%; mix-blend-mode: normal; opacity: .9; }
+.brand h1 { font-size: 26px; font-weight: 800; }
+.brand p { margin: 0; color: var(--muted); font-size: 13px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+.chip b { color: var(--ink); font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.ok { background: var(--good); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+button.chip { cursor: pointer; }
+
+/* Setup */
+.setup { display: grid; grid-template-columns: minmax(0, 1fr) 370px; gap: 28px; align-items: start; }
+@media (max-width: 940px) { .setup { grid-template-columns: minmax(0, 1fr); } }
+.hero { padding-block: 10px 26px; max-width: 760px; }
+.hero h2 { font-size: clamp(30px, 4.6vw, 50px); font-weight: 800; line-height: 1.04; }
+.hero h2 em { font-style: normal; color: var(--accent); }
+.hero p { color: var(--muted); font-size: 17px; margin: 14px 0 0; max-width: 60ch; }
+.step { margin-bottom: 30px; }
+.step-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.step-h .n { font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: 700; }
+.step-h h3 { font-size: 19px; font-weight: 700; }
+.grid { display: grid; gap: 12px; }
+.scen { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.pers { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.opt {
+  text-align: left; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r);
+  padding: 15px 16px; display: flex; flex-direction: column; gap: 6px; transition: border-color .15s, transform .15s, box-shadow .15s; min-width: 0;
+}
+.opt:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); transform: translateY(-1px); }
+.opt[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.opt .t { font-weight: 600; font-size: 15.5px; }
+.opt .s { color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+.opt .goal { font-size: 12.5px; color: var(--ink); border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 4px; }
+.opt .goal span { color: var(--muted); }
+.ico { width: 30px; height: 30px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.ico svg { width: 17px; height: 17px; }
+.p-top { display: flex; gap: 12px; align-items: center; }
+.avatar { width: 46px; height: 46px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  background: radial-gradient(circle at 32% 28%, hsl(var(--h) 85% 68%), hsl(var(--h) 70% 42%) 70%); }
+.p-name { font-weight: 600; font-size: 15px; line-height: 1.25; }
+.p-title { font-size: 13px; color: var(--muted); }
+.traits { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.trait { font-size: 11.5px; padding: 2px 8px; border-radius: 99px; background: var(--surface-2); color: var(--muted); }
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 8px 16px; border-radius: 9px; font-weight: 500; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.lvl-note { color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+.startbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 18px; border-radius: var(--r); background: var(--ink); color: var(--bg); }
+.startbar p { margin: 0; flex: 1 1 260px; font-size: 14px; opacity: .85; }
+.btn { border: 0; border-radius: 12px; padding: 13px 20px; font-weight: 600; display: inline-flex; align-items: center; gap: 9px; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.btn-big { font-size: 16.5px; padding: 15px 24px; }
+.btn-ghost { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
+.btn-small { padding: 8px 13px; font-size: 13.5px; border-radius: 10px; }
+.notice { border: 1.5px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); border-radius: var(--r); padding: 14px 16px; margin-bottom: 22px; font-size: 14px; }
+.notice b { display: block; margin-bottom: 2px; }
+
+/* Company panel */
+aside.company { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; position: sticky; top: 16px; }
+@media (max-width: 940px) { aside.company { position: static; } }
+.company-h { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }
+.company-h h3 { font-size: 19px; }
+.badge { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+.company > p { color: var(--muted); font-size: 13.5px; margin: 0 0 14px; }
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 11px; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.field input, .field textarea { width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 10px; padding: 9px 11px; font-size: 14px; resize: vertical; }
+.field input:focus, .field textarea:focus { border-color: var(--accent); outline: none; }
+.upload { border: 1.5px dashed var(--line); border-radius: 12px; padding: 14px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
+.upload.drag { border-color: var(--accent); background: var(--accent-soft); }
+.upload-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.upload small { color: var(--muted); font-size: 12.5px; }
+.upload textarea { width: 100%; min-height: 70px; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); font-size: 13.5px; resize: vertical; }
+.status-line { font-size: 13px; color: var(--muted); min-height: 1em; }
+.status-line.err { color: var(--bad); }
+.history { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.history ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.history li { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+.history li span:first-child { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Call stage */
+.call { background: var(--stage); color: var(--stage-fg); border-radius: 24px; overflow: hidden; margin-top: 8px; }
+.call-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); min-height: 620px; }
+@media (max-width: 880px) { .call-grid { grid-template-columns: minmax(0, 1fr); } }
+.stagecol { padding: 26px; display: flex; flex-direction: column; gap: 18px; border-right: 1px solid var(--stage-line); }
+@media (max-width: 880px) { .stagecol { border-right: 0; border-bottom: 1px solid var(--stage-line); } }
+.call-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.call-meta .label { color: var(--stage-muted); }
+.timer { font-family: var(--font-mono); font-size: 15px; color: var(--stage-fg); background: var(--stage-2); padding: 5px 10px; border-radius: 8px; }
+.orb-zone { flex: 1; display: grid; place-items: center; min-height: 300px; position: relative; }
+.orb { --h: 220; --lvl: 0; width: min(240px, 60vw); aspect-ratio: 1; max-width: 100%; border-radius: 50%; position: relative;
+  background: radial-gradient(circle at 35% 30%, hsl(var(--h) 95% 74%), hsl(var(--h) 75% 48%) 45%, hsl(var(--h) 70% 20%) 100%);
+  box-shadow: 0 0 calc(40px + var(--lvl) * 80px) hsl(var(--h) 90% 55% / calc(.25 + var(--lvl) * .45));
+  transform: scale(calc(1 + var(--lvl) * .07)); transition: transform .09s linear, box-shadow .09s linear; display: grid; place-items: center; }
+.orb .initials { font-family: var(--font-display); font-weight: 800; font-size: 54px; color: rgb(255 255 255 / .92); letter-spacing: -0.02em; }
+.orb::before, .orb::after { content: ""; position: absolute; inset: -14px; border-radius: 50%; border: 2px solid hsl(var(--h) 90% 70% / .0); }
+.orb[data-state="listening"]::before { border-color: hsl(var(--h) 90% 70% / .55); animation: ripple 1.8s ease-out infinite; }
+.orb[data-state="listening"]::after { border-color: hsl(var(--h) 90% 70% / .4); animation: ripple 1.8s .9s ease-out infinite; }
+.orb[data-state="thinking"]::before { inset: -12px; border: 2px dashed hsl(var(--h) 90% 75% / .7); animation: spin 3.5s linear infinite; }
+.orb[data-state="idle"] { filter: saturate(.55) brightness(.8); }
+@keyframes ripple { from { transform: scale(1); opacity: 1; } to { transform: scale(1.35); opacity: 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.who { text-align: center; }
+.who h2 { font-size: 26px; font-weight: 700; }
+.who p { margin: 2px 0 0; color: var(--stage-muted); font-size: 14px; }
+.state-line { text-align: center; font-size: 14px; color: var(--stage-muted); min-height: 1.4em; }
+.state-line b { color: var(--stage-fg); font-weight: 600; }
+.mood { background: var(--stage-2); border-radius: 14px; padding: 12px 14px; }
+.mood-top { display: flex; justify-content: space-between; font-size: 13px; color: var(--stage-muted); margin-bottom: 8px; }
+.mood-top b { color: var(--stage-fg); font-family: var(--font-mono); }
+.meter { height: 8px; border-radius: 99px; background: var(--stage-line); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 30%; border-radius: 99px; background: linear-gradient(90deg, #e2574c, #e8b23f 50%, #3fcf8e); background-size: 300px 100%; transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.convcol { display: flex; flex-direction: column; min-height: 0; }
+.transcript { flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; gap: 12px; max-height: 470px; min-height: 260px; }
+@media (max-width: 880px) { .transcript { max-height: 360px; } }
+.bubble { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 14.5px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.klant { align-self: flex-start; background: var(--stage-2); border-bottom-left-radius: 5px; }
+.bubble.jij { align-self: flex-end; background: hsl(230 70% 52%); color: #fff; border-bottom-right-radius: 5px; }
+.bubble .who-l { display: block; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; opacity: .65; margin-bottom: 2px; }
+.bubble.typing::after { content: "▍"; animation: blink 1s steps(2) infinite; opacity: .7; }
+@keyframes blink { 50% { opacity: 0; } }
+.empty-t { color: var(--stage-muted); font-size: 14px; text-align: center; margin: auto; max-width: 34ch; }
+.controls { border-top: 1px solid var(--stage-line); padding: 16px 22px 20px; display: flex; flex-direction: column; gap: 12px; }
+.heard { min-height: 1.5em; color: var(--stage-fg); font-size: 15px; }
+.heard .label { color: var(--stage-muted); margin-right: 6px; }
+.ctrl-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ctrl-row .grow { flex: 1; }
+.sbtn { border: 1.5px solid var(--stage-line); background: var(--stage-2); color: var(--stage-fg); border-radius: 11px; padding: 10px 15px; font-weight: 600; font-size: 14px; display: inline-flex; gap: 8px; align-items: center; }
+.sbtn:hover { border-color: var(--stage-muted); }
+.sbtn.end { background: #c9372e; border-color: #c9372e; color: #fff; }
+.sbtn.go { background: hsl(230 80% 60%); border-color: hsl(230 80% 60%); color: #fff; }
+.sbtn:disabled { opacity: .45; cursor: not-allowed; }
+.type-row { display: flex; gap: 8px; align-items: flex-end; }
+.type-row textarea { flex: 1; min-width: 0; resize: none; min-height: 48px; max-height: 140px; border-radius: 12px; border: 1.5px solid var(--stage-line); background: var(--stage-2); color: var(--stage-fg); padding: 12px 14px; font-size: 15px; }
+.type-row textarea:focus { outline: none; border-color: hsl(230 80% 65%); }
+.tip { font-size: 12.5px; color: var(--stage-muted); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.tip kbd { font-family: var(--font-mono); font-size: 11.5px; background: var(--stage-2); border: 1px solid var(--stage-line); border-radius: 5px; padding: 1px 5px; color: var(--stage-fg); }
+.tip label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.mic-pill { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--stage-muted); }
+.mic-pill i { width: 10px; height: 10px; border-radius: 50%; background: var(--stage-muted); }
+.mic-pill.on i { background: #3fcf8e; box-shadow: 0 0 0 0 #3fcf8e; animation: pulse 1.4s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgb(63 207 142 / .6); } 100% { box-shadow: 0 0 0 10px rgb(63 207 142 / 0); } }
+
+/* Result */
+.result { margin-top: 8px; }
+.res-hero { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: 28px; }
+@media (max-width: 640px) { .res-hero { grid-template-columns: minmax(0, 1fr); } }
+.score-ring { width: 150px; height: 150px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: conic-gradient(var(--sc, var(--accent)) calc(var(--v, 0) * 1%), var(--surface-2) 0); }
+.score-ring::before { content: ""; position: absolute; inset: 12px; border-radius: 50%; background: var(--surface); }
+.score-ring b { position: relative; font-family: var(--font-mono); font-size: 44px; font-weight: 700; line-height: 1; }
+.score-ring small { position: absolute; bottom: 34px; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+.res-hero h2 { font-size: clamp(24px, 3.2vw, 34px); font-weight: 700; line-height: 1.12; }
+.res-sub { color: var(--muted); margin: 8px 0 0; }
+.goal-pill { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 6px 12px; border-radius: 99px; font-size: 13.5px; font-weight: 600; }
+.goal-pill.yes { background: color-mix(in srgb, var(--good) 14%, var(--surface)); color: var(--good); }
+.goal-pill.no { background: color-mix(in srgb, var(--bad) 12%, var(--surface)); color: var(--bad); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 16px 0; }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.stat b { display: block; font-family: var(--font-mono); font-size: 22px; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12.5px; color: var(--muted); }
+.res-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 800px) { .res-grid { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; min-width: 0; }
+.card h3 { font-size: 17px; margin-bottom: 12px; }
+.card.wide { grid-column: 1 / -1; }
+.skill { display: grid; grid-template-columns: minmax(0, 170px) minmax(0, 1fr) 38px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.skill:last-child { border-bottom: 0; }
+@media (max-width: 560px) { .skill { grid-template-columns: minmax(0, 1fr) 38px; } .skill .bar { grid-column: 1 / -1; grid-row: 2; } }
+.skill .nm { font-weight: 600; font-size: 14px; }
+.skill .why { grid-column: 1 / -1; font-size: 13.5px; color: var(--muted); margin-top: -2px; }
+.bar { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 99px; }
+.skill .val { font-family: var(--font-mono); font-weight: 700; text-align: right; }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.quote { border-left: 3px solid var(--line); padding: 4px 0 4px 12px; color: var(--muted); font-style: italic; margin: 0 0 10px; }
+.better { border-left: 3px solid var(--good); padding: 4px 0 4px 12px; margin: 0; }
+.better .label { color: var(--good); display: block; margin-bottom: 2px; }
+.pair { padding: 12px 0; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.pair:last-child { border-bottom: 0; }
+.reveal { background: var(--ink); color: var(--bg); border: 0; }
+.reveal h3 { color: var(--bg); }
+.reveal dl { margin: 0; display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 8px 16px; font-size: 14px; }
+@media (max-width: 560px) { .reveal dl { grid-template-columns: minmax(0, 1fr); } .reveal dd { margin-bottom: 8px; } }
+.reveal dt { opacity: .65; }
+.reveal dd { margin: 0; }
+.reveal .found { margin-top: 14px; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); font-size: 14px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.loading { padding: 70px 20px; text-align: center; }
+.loading .orb { margin: 0 auto 24px; width: 110px; }
+.loading p { color: var(--muted); }
+details.tx { margin-top: 16px; }
+details.tx summary { cursor: pointer; font-weight: 600; }
+details.tx .lines { margin-top: 10px; display: grid; gap: 6px; font-size: 14px; }
+details.tx .lines b { font-weight: 600; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 20; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><i></i><i></i></div>
+      <div>
+        <h1>Tegenspeler</h1>
+        <p>Oefen salesgesprekken met een klant die terugpraat</p>
+      </div>
+    </div>
+    <div class="chips">
+      <span class="chip" id="brainChip"><span class="dot warn"></span><span>AI: <b>verbinden…</b></span></span>
+      <span class="chip" id="micChip"><span class="dot"></span><span>Spraak: <b>–</b></span></span>
+      <button class="chip" id="voiceToggle" type="button" aria-pressed="true"><span class="dot ok"></span><span>Stem klant: <b>aan</b></span></button>
+    </div>
+  </header>
+
+  <!-- SETUP -->
+  <section id="setup">
+    <div class="setup">
+      <div>
+        <div class="hero">
+          <h2>Je volgende klant is lastig. <em>Oefen hem eerst hier.</em></h2>
+          <p>Kies een situatie en een type klant. De klant praat hardop terug, reageert op wat je zegt en houdt een verborgen agenda voor zich. Na afloop krijg je een scorekaart van je coach.</p>
+        </div>
+        <div class="notice" id="noBrain" hidden>
+          <b>Er is nog geen AI-verbinding.</b>
+          <span id="noBrainText">Open deze pagina in Claude (claude.ai), of start de lokale versie met <span class="mono">npm start</span>.</span>
+        </div>
+
+        <div class="step">
+          <div class="step-h"><span class="n">01</span><h3>Kies de situatie</h3></div>
+          <div class="grid scen" id="scenList"></div>
+        </div>
+        <div class="step">
+          <div class="step-h"><span class="n">02</span><h3>Kies je klant</h3></div>
+          <div class="grid pers" id="persList"></div>
+        </div>
+        <div class="step">
+          <div class="step-h"><span class="n">03</span><h3>Hoe moeilijk?</h3></div>
+          <div class="seg" id="lvlSeg" role="group" aria-label="Moeilijkheid"></div>
+          <div class="lvl-note" id="lvlNote"></div>
+        </div>
+        <div class="startbar">
+          <p id="startNote">De klant opent het gesprek. Daarna is het aan jou.</p>
+          <button class="btn btn-primary btn-big" id="startBtn" type="button" disabled>Start gesprek</button>
+        </div>
+      </div>
+
+      <aside class="company" aria-labelledby="coH">
+        <div class="company-h"><h3 id="coH">Jouw bedrijf</h3><span class="badge" id="exBadge">Voorbeeld</span></div>
+        <p>De klant reageert op wat jij echt verkoopt. Vul je eigen bedrijf in, of upload een brochure, offerte of websitetekst.</p>
+        <div class="upload" id="drop">
+          <div class="upload-row">
+            <label class="btn btn-ghost btn-small" for="fileIn">Upload bestand</label>
+            <input type="file" id="fileIn" accept=".pdf,.txt,.md,.html,.htm,.csv,text/plain,application/pdf" hidden>
+            <small>PDF of tekst, of sleep het hierheen</small>
+          </div>
+          <textarea id="pasteIn" placeholder="…of plak hier tekst van je website of een offerte"></textarea>
+          <div class="upload-row">
+            <button class="btn btn-primary btn-small" id="readBtn" type="button">Laat AI dit inlezen</button>
+            <span class="status-line" id="readStatus"></span>
+          </div>
+        </div>
+        <form id="coForm" autocomplete="off">
+          <div class="field"><label for="f_naam">Bedrijfsnaam</label><input id="f_naam" name="naam"></div>
+          <div class="field"><label for="f_aanbod">Wat verkoop je?</label><textarea id="f_aanbod" name="aanbod" rows="2"></textarea></div>
+          <div class="field"><label for="f_prijs">Prijs of tarief</label><input id="f_prijs" name="prijs"></div>
+          <div class="field"><label for="f_doelgroep">Je ideale klant</label><textarea id="f_doelgroep" name="doelgroep" rows="2"></textarea></div>
+          <div class="field"><label for="f_usps">Waarom kiezen klanten voor jou?</label><textarea id="f_usps" name="usps" rows="2"></textarea></div>
+          <div class="field"><label for="f_concurrenten">Concurrenten of alternatieven</label><input id="f_concurrenten" name="concurrenten"></div>
+          <div class="field"><label for="f_context">Overige context</label><textarea id="f_context" name="context" rows="2"></textarea></div>
+          <button class="btn btn-ghost btn-small" type="button" id="resetCo">Voorbeeld terugzetten</button>
+        </form>
+        <div class="history" id="history" hidden>
+          <div class="label">Je laatste sessies</div>
+          <ol id="histList"></ol>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- CALL -->
+  <section id="call" hidden>
+    <div class="call">
+      <div class="call-grid">
+        <div class="stagecol">
+          <div class="call-meta">
+            <span class="label" id="callScen">Koude acquisitie · Realistisch</span>
+            <span class="timer" id="timer">00:00</span>
+          </div>
+          <div class="orb-zone">
+            <div class="orb" id="orb" data-state="thinking"><span class="initials" id="orbInit">HV</span></div>
+          </div>
+          <div class="who"><h2 id="callName">Henk Vermeulen</h2><p id="callRole">De sceptische inkoper</p></div>
+          <div class="state-line" id="stateLine">Klant wordt voorbereid…</div>
+          <div class="mood" title="Hoe geïnteresseerd de klant nu is">
+            <div class="mood-top"><span>Interesse van de klant</span><b id="moodVal">–</b></div>
+            <div class="meter"><i id="moodBar"></i></div>
+          </div>
+        </div>
+        <div class="convcol">
+          <div class="transcript" id="transcript" aria-live="polite">
+            <p class="empty-t" id="emptyT">Het gesprek verschijnt hier terwijl jullie praten.</p>
+          </div>
+          <div class="controls">
+            <div id="voiceCtl" hidden>
+              <div class="heard" id="heard"><span class="label">Je zegt</span><span id="heardText"></span></div>
+              <div class="ctrl-row">
+                <span class="mic-pill" id="micPill"><i></i><span id="micPillText">Microfoon wacht</span></span>
+                <span class="grow"></span>
+                <button class="sbtn go" id="doneTalk" type="button">Klaar met praten</button>
+              </div>
+            </div>
+            <div id="typeCtl" hidden>
+              <div class="type-row">
+                <textarea id="typeIn" rows="1" placeholder="Zeg iets tegen de klant…"></textarea>
+                <button class="sbtn go" id="sendBtn" type="button">Stuur</button>
+              </div>
+              <div class="tip" style="margin-top:8px">
+                <span>Praat in plaats van typen: <kbd>Win</kbd>+<kbd>H</kbd> op Windows, twee keer <kbd>Fn</kbd> op Mac.</span>
+                <label><input type="checkbox" id="autoSend" checked> Verstuur vanzelf als ik stil val</label>
+              </div>
+            </div>
+            <div class="ctrl-row">
+              <button class="sbtn" id="interruptBtn" type="button" disabled>Onderbreek de klant</button>
+              <span class="grow"></span>
+              <button class="sbtn end" id="endBtn" type="button">Gesprek afronden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="result" hidden></section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- Content ---------- */
+const ICONS = {
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>',
+  ask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  pen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>'
+};
+
+const SCENARIOS = [
+  { id: 'koud', titel: 'Koude acquisitie', sub: 'Je belt iemand die jou niet verwacht.', icon: 'phone', kanaal: 'telefoon',
+    doel: 'Een vervolgafspraak inplannen.',
+    setting: 'Telefoongesprek. De verkoper belt jou onaangekondigd op je mobiel. Je neemt op terwijl je met iets anders bezig bent. Je kent de verkoper en het bedrijf niet.',
+    opening: 'De klant neemt de telefoon op, bijvoorbeeld alleen met de eigen naam, een beetje afgeleid.',
+    kennis: 'Je kent dit bedrijf niet en hebt de verkoper nooit gesproken.',
+    vaardigheden: [
+      ['Opening', 'Stelt zich kort voor en vraagt of het uitkomt, zonder te rammelen.'],
+      ['Relevantie', 'Maakt binnen 30 seconden duidelijk waarom dit voor déze klant interessant is.'],
+      ['Nieuwsgierigheid wekken', 'Stelt prikkelende vragen in plaats van een lange pitch te houden.'],
+      ['Afwimpelen ombuigen', 'Gaat goed om met "geen tijd", "stuur maar een mailtje", "geen interesse".'],
+      ['Vervolgstap', 'Vraagt concreet om een afspraak met datum en tijd.']
+    ] },
+  { id: 'discovery', titel: 'Kennismakingsgesprek', sub: 'Ontdek wat de klant echt dwarszit.', icon: 'ask', kanaal: 'afspraak',
+    doel: 'De echte pijn én wat die kost boven tafel krijgen.',
+    setting: 'Eerste kennismakingsgesprek op jouw kantoor, ingepland voor een half uur. Je hebt ingestemd met het gesprek omdat je wel nieuwsgierig bent, maar je bent nog niets van plan.',
+    opening: 'De klant begroet de verkoper, bijvoorbeeld bij binnenkomst, en zegt hoeveel tijd er is.',
+    kennis: 'Je weet ongeveer wat het bedrijf doet, meer niet.',
+    vaardigheden: [
+      ['Agenda & rapport', 'Zet een prettige toon en spreekt af wat het doel van het gesprek is.'],
+      ['Open vragen', 'Stelt open vragen in plaats van gesloten of suggestieve vragen.'],
+      ['Doorvragen', 'Vraagt door naar de oorzaak en de impact (tijd, geld, frustratie).'],
+      ['Luisteren & samenvatten', 'Vat samen in de woorden van de klant en checkt of het klopt.'],
+      ['Vervolgafspraak', 'Sluit af met een concrete, logische volgende stap.']
+    ] },
+  { id: 'bezwaren', titel: 'Bezwaren & onderhandelen', sub: '"Te duur." "We zitten al goed." "Even nadenken."', icon: 'shield', kanaal: 'afspraak',
+    doel: 'De deal redden zonder onnodig korting weg te geven.',
+    setting: 'Vervolggesprek (videocall). De klant heeft de offerte van de verkoper ontvangen en heeft bedenkingen. Je hebt bezwaren die je stevig naar voren brengt.',
+    opening: 'De klant begint direct met een bezwaar over de offerte.',
+    kennis: 'Je hebt al een kennismakingsgesprek gehad en de offerte gelezen. De prijs uit het bedrijfsprofiel staat in de offerte.',
+    vaardigheden: [
+      ['Bezwaar uitvragen', 'Vraagt wat er écht achter het bezwaar zit voordat hij antwoordt.'],
+      ['Erkennen', 'Erkent het bezwaar zonder defensief te worden of meteen te pareren.'],
+      ['Waarde boven prijs', 'Koppelt de prijs aan wat het de klant oplevert.'],
+      ['Ruilen, niet geven', 'Geeft alleen iets als hij er iets voor terugkrijgt.'],
+      ['Rust & overtuiging', 'Blijft rustig, laat stiltes vallen, klinkt zeker.']
+    ] },
+  { id: 'closing', titel: 'Afsluiten', sub: 'Het moment waarop de klant ja moet zeggen.', icon: 'pen', kanaal: 'afspraak',
+    doel: 'Een duidelijk ja, met afspraken over de start.',
+    setting: 'Laatste gesprek (bij de klant op kantoor). Alles is besproken, de offerte ligt er. Je bent positief maar nog niet over de streep, en je hebt nog één of twee laatste twijfels.',
+    opening: 'De klant opent vriendelijk en zegt dat hij de stukken nog eens heeft doorgenomen.',
+    kennis: 'Je kent het voorstel en de prijs. Je bent al ver in het proces.',
+    vaardigheden: [
+      ['Samenvatten van waarde', 'Vat kort samen wat de klant ermee wint, in diens eigen woorden.'],
+      ['Koopsignalen herkennen', 'Merkt op wanneer de klant eigenlijk al ja zegt.'],
+      ['Afsluitvraag', 'Durft direct te vragen om de beslissing.'],
+      ['Laatste twijfels', 'Haalt de laatste twijfels boven en neemt ze weg.'],
+      ['Concrete afspraken', 'Spreekt start, ondertekening en volgende stappen af.']
+    ] }
+];
+
+const PERSONAS = [
+  { id: 'inkoper', naam: 'Henk Vermeulen', titel: 'De sceptische inkoper', leeftijd: 56, g: 'm', hue: 24, rate: 0.96,
+    kort: 'Wil bewijs en vergelijkt alles op prijs.', traits: ['Kritisch', 'Prijsgericht', 'Wantrouwig'],
+    gedrag: 'Je bent een ervaren inkoper die al honderd verkopers heeft gezien. Je bent kortaf maar beleefd, vraagt naar bewijs, cijfers en referenties, en begint graag over de prijs. Enthousiasme maakt je juist argwanend. Je wordt pas milder als de verkoper concreet en eerlijk is.' },
+  { id: 'directeur', naam: 'Sandra de Wit', titel: 'De drukke directeur', leeftijd: 48, g: 'v', hue: 345, rate: 1.1,
+    kort: 'Heeft geen tijd. Kom ter zake.', traits: ['Ongeduldig', 'Resultaatgericht', 'Direct'],
+    gedrag: 'Je bent directeur-eigenaar, je agenda zit vol en je hebt een hekel aan vage praatjes. Je onderbreekt lange verhalen ("Wat is je punt?") en wilt weten wat iets oplevert in geld of tijd. Als de verkoper scherp en kort is, geef je ruimte.' },
+  { id: 'twijfelaar', naam: 'Mark Jansen', titel: 'De vriendelijke twijfelaar', leeftijd: 34, g: 'm', hue: 152, rate: 1.0,
+    kort: 'Zegt overal ja op, maar beslist nooit.', traits: ['Aardig', 'Conflictmijdend', 'Besluiteloos'],
+    gedrag: 'Je bent vriendelijk en zegt vaak "Ja, interessant!", maar je vermijdt beslissingen. Je verschuilt je achter "even overleggen", "nog even nadenken", "stuur maar wat informatie". Je echte reden om te twijfelen noem je alleen als de verkoper er rustig en direct naar vraagt.' },
+  { id: 'loyaal', naam: 'Ingrid Bakker', titel: 'De klant van de concurrent', leeftijd: 52, g: 'v', hue: 268, rate: 0.98,
+    kort: '"We zitten al goed." Tevreden met haar huidige partij.', traits: ['Loyaal', 'Tevreden', 'Gesloten'],
+    gedrag: 'Je werkt al jaren met een andere leverancier en bent daar redelijk tevreden over. Overstappen voelt als gedoe en risico. Je bent niet onvriendelijk, maar wel gesloten. Je hebt kleine ergernissen over je huidige leverancier, die je alleen deelt als de verkoper goede vragen stelt in plaats van te pitchen.' },
+  { id: 'analist', naam: 'Nadia Kaya', titel: 'De analist', leeftijd: 41, g: 'v', hue: 196, rate: 1.0,
+    kort: 'Wil alles tot in detail weten.', traits: ['Grondig', 'Feitelijk', 'Voorzichtig'],
+    gedrag: 'Je bent controller en denkt in risico\'s, details en onderbouwing. Je stelt precieze vragen over implementatie, voorwaarden, beveiliging en terugverdientijd. Vage antwoorden irriteren je. Je waardeert het als een verkoper eerlijk zegt iets niet te weten en het uitzoekt.' },
+  { id: 'onderhandelaar', naam: 'Patrick Smit', titel: 'De harde onderhandelaar', leeftijd: 45, g: 'm', hue: 46, rate: 1.04,
+    kort: 'Speelt spelletjes om korting te krijgen.', traits: ['Dominant', 'Tactisch', 'Charmant'],
+    gedrag: 'Je bent een geslepen onderhandelaar. Je gebruikt tactieken: "jullie concurrent is twintig procent goedkoper", stiltes, tijdsdruk, "als je nu korting geeft, teken ik vandaag". Je test of de verkoper zomaar toegeeft. Je respecteert verkopers die rustig blijven en alleen iets geven als ze er iets voor terugkrijgen.' }
+];
+
+const LEVELS = [
+  { id: 'mild', label: 'Mild', regel: 'Je bent redelijk welwillend en geeft de verkoper het voordeel van de twijfel. Je bezwaren zijn zacht.', note: 'Een welwillende klant. Goed om een nieuwe aanpak te proberen.' },
+  { id: 'realistisch', label: 'Realistisch', regel: 'Je gedraagt je als een echte klant: niet vijandig, maar je geeft niets gratis weg en je hebt echte bezwaren.', note: 'Zoals een gemiddelde echte klant: niet vijandig, wel kritisch.' },
+  { id: 'pittig', label: 'Pittig', regel: 'Je bent lastig: weinig tijd, je onderbreekt, je gooit stevige bezwaren op. Als de verkoper twee keer achter elkaar niet relevant is of blijft pitchen, beëindig je het gesprek.', note: 'Weinig geduld en stevige bezwaren. Blijf je twee keer vaag, dan is het gesprek voorbij.' }
+];
+
+const EXAMPLE_CO = {
+  naam: 'Planwerk',
+  aanbod: 'Online planningssoftware voor installatiebedrijven: monteurs inplannen, werkbonnen digitaal laten tekenen en direct factureren.',
+  prijs: '€39 per gebruiker per maand, implementatie eenmalig €1.500',
+  doelgroep: 'Installatie- en onderhoudsbedrijven met 10 tot 80 monteurs in Nederland',
+  usps: 'Monteurs werken offline in de app, koppeling met Exact en AFAS, binnen 2 weken live, Nederlandse support',
+  concurrenten: 'Excel en whiteboards, grote ERP-pakketten, andere planningstools',
+  context: 'Klanten besparen gemiddeld 6 uur planningswerk per week en factureren 9 dagen sneller.'
+};
+const CO_FIELDS = ['naam', 'aanbod', 'prijs', 'doelgroep', 'usps', 'concurrenten', 'context'];
+
+/* ---------- Helpers ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('tegenspeler:' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('tegenspeler:' + k, JSON.stringify(v)); } catch {} }
+};
+const initials = n => n.split(' ').filter(w => /^[A-Z]/.test(w)).map(w => w[0]).slice(0, 2).join('');
+const firstName = n => n.split(' ')[0];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+function parseJsonLoose(text) {
+  try { return JSON.parse(text); } catch {}
+  const f = text.match(/```(?:json)?\s*([\s\S]*?)```/); if (f) { try { return JSON.parse(f[1]); } catch {} }
+  const a = text.indexOf('{'), b = text.lastIndexOf('}');
+  if (a >= 0 && b > a) { try { return JSON.parse(text.slice(a, b + 1)); } catch {} }
+  throw { code: 'invalid_json', message: 'Geen geldige JSON', text };
+}
+function errCopy(e) {
+  const c = e && e.code;
+  if (c === 'not_granted') return 'Je hebt de pagina geen toestemming gegeven om Claude te gebruiken. Herlaad de pagina en kies Toestaan.';
+  if (c === 'rate_limited') return 'Je hebt even te veel gevraagd of je gebruikslimiet bereikt. Wacht een paar minuten en probeer het opnieuw.';
+  if (c === 'sampling_disabled') return 'Claude is niet beschikbaar voor dit account.';
+  if (c === 'session_expired') return 'Je bent uitgelogd bij Claude. Log opnieuw in en herlaad de pagina.';
+  if (c === 'invalid_json') return 'Het antwoord kwam niet in het juiste formaat terug. Probeer het nog een keer.';
+  if (c === 'refused') return 'Claude wilde hier niet op reageren. Probeer het anders te formuleren.';
+  return 'De verbinding met de AI viel weg. Probeer het nog een keer.' + (e && e.message && Brain.mode === 'local' ? ' (' + e.message + ')' : '');
+}
+
+/* ---------- Brain: one interface, swappable engines ----------
+   artifact: runs on the viewer's own Claude plan (claude.ai)
+   local:    node server.mjs drives the Claude Code CLI on your own subscription
+   later:    a paid version swaps in a server that calls the API */
+const Brain = {
+  mode: null, sample: null,
+  async detect() {
+    if (window.claude && typeof window.claude.use === 'function') {
+      try { const s = await window.claude.use('sample'); if (s) { this.sample = s; this.mode = 'artifact'; return; } } catch {}
+    } else if (/^https?:$/.test(location.protocol)) {
+      try {
+        const r = await fetch('/api/health', { cache: 'no-store' });
+        if (r.ok) { const j = await r.json(); if (j && j.ok) { this.mode = 'local'; this.mock = j.mode === 'mock'; return; } }
+      } catch {}
+    }
+    this.mode = null;
+  },
+  async ask(prompt, { tier = 'quick', onText, signal, json = false } = {}) {
+    if (this.mode === 'artifact') {
+      const opts = { modelTier: tier, cache: false };
+      if (signal) opts.signal = signal;
+      if (onText) opts.onText = onText;
+      if (json) return await this.sample.json(prompt, opts);
+      const r = await this.sample(prompt, opts);
+      return r.text;
+    }
+    if (this.mode === 'local') {
+      let res;
+      try { res = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt, tier }), signal }); }
+      catch (e) { throw { code: signal && signal.aborted ? 'cancelled' : 'upstream_error', message: String(e && e.message || e) }; }
+      if (!res.ok) throw { code: 'upstream_error', message: await res.text() };
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let text = '';
+      try {
+        for (;;) {
+          const { done, value } = await reader.read(); if (done) break;
+          const d = dec.decode(value, { stream: true }); if (!d) continue;
+          text += d;
+          const ei = text.indexOf('\u0000ERROR:');
+          if (ei >= 0) throw { code: 'upstream_error', message: text.slice(ei + 7).trim(), text: text.slice(0, ei) };
+          if (onText) onText({ text, delta: d });
+        }
+      } catch (e) { if (signal && signal.aborted) throw { code: 'cancelled', text }; throw e.code ? e : { code: 'upstream_error', message: String(e) }; }
+      if (!text.trim()) throw { code: 'empty_completion', message: 'Leeg antwoord' };
+      return json ? parseJsonLoose(text) : text;
+    }
+    throw { code: 'sampling_disabled', message: 'Geen AI-verbinding' };
+  }
+};
+
+/* ---------- Voice out: the customer speaks ---------- */
+const Voice = {
+  on: store.get('voice', true), voices: [], pending: 0, waiters: [], level: 0,
+  load() {
+    if (!('speechSynthesis' in window)) return;
+    const grab = () => { this.voices = speechSynthesis.getVoices().filter(v => /^nl/i.test(v.lang)); };
+    grab(); speechSynthesis.addEventListener?.('voiceschanged', grab);
+  },
+  pick(p) {
+    const FEM = /fenna|colette|claire|ellen|femke|lotte|saskia|google nederlands|dena|anouk|laura|hanna|sanne/i;
+    const MAL = /maarten|xander|frank|arnaud|guus|daan|willem|bram|ruben|lukas/i;
+    const score = v => (/natural|neural|online/i.test(v.name) ? 4 : 0) + (/premium|enhanced|google/i.test(v.name) ? 2 : 0) + (/nl-NL/i.test(v.lang) ? 1 : 0);
+    const want = p.g === 'v' ? FEM : MAL;
+    const ranked = this.voices.slice().sort((a, b) => score(b) - score(a));
+    const match = ranked.filter(v => want.test(v.name));
+    const pool = match.length ? match : ranked;
+    // spread personas of the same gender over the available voices
+    const idx = PERSONAS.filter(x => x.g === p.g).indexOf(p);
+    const voice = pool.length ? pool[Math.min(idx, pool.length - 1) % pool.length] : null;
+    let pitch = 1;
+    if (!match.length) pitch = p.g === 'v' ? 1.15 : 0.78;
+    pitch += [0, -0.06, 0.06][idx % 3] || 0;
+    return { voice, pitch };
+  },
+  speak(text, p) {
+    text = text.trim(); if (!text) return;
+    if (!this.on || !('speechSynthesis' in window)) return;
+    const { voice, pitch } = this.pick(p);
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = voice ? voice.lang : 'nl-NL'; if (voice) u.voice = voice;
+    u.rate = p.rate || 1; u.pitch = pitch;
+    let finished = false;
+    const done = () => { if (finished) return; finished = true; clearTimeout(guard); this.pending = Math.max(0, this.pending - 1); if (!this.pending) { this.level = 0; this.waiters.splice(0).forEach(f => f()); } };
+    const guard = setTimeout(done, 2500 + text.length * 95 / (p.rate || 1));
+    u.onstart = () => { Call.setOrb('speaking'); };
+    u.onboundary = () => { this.level = 1; };
+    u.onend = done; u.onerror = done;
+    this.pending++;
+    speechSynthesis.speak(u);
+  },
+  drain() { return new Promise(r => { if (!this.pending) r(); else this.waiters.push(r); }); },
+  stop() { try { speechSynthesis.cancel(); } catch {} this.pending = 0; this.level = 0; this.waiters.splice(0).forEach(f => f()); }
+};
+
+/* ---------- Voice in: hands-free listening ---------- */
+const Ears = {
+  SR: window.SpeechRecognition || window.webkitSpeechRecognition,
+  rec: null, want: false, running: false, finalT: '', interim: '', timer: null, blocked: false, silenceMs: 1500,
+  get supported() { return !!this.SR && !this.blocked; },
+  init() {
+    if (!this.SR || this.rec) return;
+    const r = this.rec = new this.SR();
+    r.lang = 'nl-NL'; r.continuous = true; r.interimResults = true;
+    r.onstart = () => { this.running = true; };
+    r.onresult = e => {
+      if (!this.want) return;
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) this.finalT += res[0].transcript + ' '; else interim += res[0].transcript;
+      }
+      this.interim = interim;
+      $('#heardText').textContent = (this.finalT + interim).trim();
+      Voice.level = Math.max(Voice.level, 0.55);
+      this.arm();
+    };
+    r.onerror = e => {
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
+        this.blocked = true; this.want = false; Call.useTyping('Je microfoon is niet beschikbaar op deze pagina. Typ of dicteer je antwoord.');
+      }
+    };
+    r.onend = () => { this.running = false; if (this.want) { try { r.start(); } catch {} } };
+  },
+  start() {
+    this.init(); if (!this.rec) return;
+    this.finalT = ''; this.interim = ''; $('#heardText').textContent = '';
+    this.want = true;
+    if (!this.running) { try { this.rec.start(); } catch {} }
+    Call.setOrb('listening'); Call.micState(true);
+  },
+  stop() { this.want = false; clearTimeout(this.timer); try { this.rec && this.rec.abort(); } catch {} Call.micState(false); },
+  arm() { clearTimeout(this.timer); this.timer = setTimeout(() => this.commit(), this.silenceMs); },
+  commit() {
+    const t = (this.finalT + ' ' + this.interim).replace(/\s+/g, ' ').trim();
+    if (!t || !this.want) return;
+    this.stop(); this.finalT = ''; this.interim = '';
+    $('#heardText').textContent = '';
+    Call.sellerSays(t);
+  }
+};
+
+/* ---------- Phone ring (cold calls) ---------- */
+const Ring = {
+  ctx: null, stopFlag: false,
+  async play(times = 2) {
+    if (!Voice.on) return;
+    try { this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)(); await this.ctx.resume(); } catch { return; }
+    this.stopFlag = false;
+    for (let i = 0; i < times && !this.stopFlag; i++) {
+      const c = this.ctx, t = c.currentTime, g = c.createGain();
+      g.gain.setValueAtTime(0, t); g.connect(c.destination);
+      [440, 480].forEach(f => { const o = c.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t); o.stop(t + 1.6); });
+      g.gain.linearRampToValueAtTime(0.07, t + 0.05); g.gain.setValueAtTime(0.07, t + 0.75); g.gain.linearRampToValueAtTime(0, t + 0.8);
+      g.gain.linearRampToValueAtTime(0.07, t + 0.85); g.gain.setValueAtTime(0.07, t + 1.55); g.gain.linearRampToValueAtTime(0, t + 1.6);
+      await sleep(2600);
+    }
+  },
+  stop() { this.stopFlag = true; }
+};
+
+/* ---------- App state ---------- */
+const S = {
+  scen: store.get('scen', 'koud'), pers: store.get('pers', 'inkoper'), lvl: store.get('lvl', 'realistisch'),
+  co: store.get('company', null) || { ...EXAMPLE_CO, isExample: true },
+  dossier: null, turns: [], mood: null, startedAt: 0, ended: false, busy: false, ctl: null, last: null
+};
+const scen = () => SCENARIOS.find(x => x.id === S.scen) || SCENARIOS[0];
+const pers = () => PERSONAS.find(x => x.id === S.pers) || PERSONAS[0];
+const lvl = () => LEVELS.find(x => x.id === S.lvl) || LEVELS[1];
+
+function companyText() {
+  const c = S.co, L = { naam: 'Bedrijf', aanbod: 'Aanbod', prijs: 'Prijs', doelgroep: 'Ideale klant', usps: 'Waarom klanten kiezen', concurrenten: 'Concurrenten/alternatieven', context: 'Overig' };
+  return CO_FIELDS.filter(k => (c[k] || '').trim()).map(k => `- ${L[k]}: ${c[k].trim()}`).join('\n') || '- (onbekend bedrijf)';
+}
+
+/* ---------- Prompts ---------- */
+function dossierPrompt() {
+  const s = scen(), p = pers(), d = lvl();
+  return `TAAK: dossier
+Je bereidt een realistisch rollenspel voor een salestraining voor. Verzin een geloofwaardige klant voor deze verkoper.
+
+DE VERKOPER EN ZIJN BEDRIJF:
+${companyText()}
+
+KLANTTYPE: ${p.titel}. ${p.gedrag}
+De klant heet ${p.naam}, ${p.leeftijd} jaar, ${p.g === 'v' ? 'vrouw' : 'man'}.
+SITUATIE: ${s.titel}. ${s.setting}
+OPENING: ${s.opening}
+NIVEAU: ${d.label}. ${d.regel}
+
+De klant werkt bij een organisatie die past bij de ideale klant van de verkoper, zodat het gesprek echt over dit aanbod kan gaan. Gebruik concrete Nederlandse details: een bedrijfsnaam, plaats, aantallen en bedragen.
+
+Antwoord met alleen JSON in precies deze vorm:
+{"functie":"...","bedrijf":"...","bedrijf_omschrijving":"één zin","situatie":"2-3 zinnen over de huidige situatie van de klant","verborgen_pijn":"het echte probleem dat de klant niet uit zichzelf vertelt","impact":"wat dat probleem concreet kost in tijd, geld of frustratie","budget":"...","beslisproces":"wie beslist mee en hoe","bezwaren":["...","...","..."],"wat_overtuigt":"waar deze klant gevoelig voor is","startinteresse":30,"openingszin":"de eerste zin die de klant hardop zegt"}`;
+}
+
+function turnPrompt() {
+  const s = scen(), p = pers(), d = lvl(), x = S.dossier;
+  const lines = S.turns.map(t => `${t.who === 'klant' ? 'KLANT' : 'VERKOPER'}: ${t.text}`).join('\n');
+  return `TAAK: klantbeurt
+Je speelt een rol in een realistisch salesgesprek dat bedoeld is om een verkoper te trainen. Jij bent de KLANT. Blijf altijd in je rol. Je weet niet dat dit een oefening is.
+
+WIE JE BENT: ${p.naam}, ${p.leeftijd} jaar, ${x.functie} bij ${x.bedrijf} (${x.bedrijf_omschrijving}).
+KARAKTER: ${p.gedrag}
+JOUW SITUATIE: ${x.situatie}
+WAT JE NIET ZOMAAR VERTELT: ${x.verborgen_pijn} Impact: ${x.impact}. Deel dit pas stukje bij beetje als de verkoper er met goede, open vragen naar vraagt.
+BUDGET: ${x.budget}
+BESLISPROCES: ${x.beslisproces}
+BEZWAREN DIE JIJ KUNT GEBRUIKEN: ${(x.bezwaren || []).join(' | ')}
+WAT JOU OVERTUIGT: ${x.wat_overtuigt}
+HET GESPREK: ${s.titel}. ${s.setting}
+WAT JE WEET VAN DE VERKOPER: werkt bij ${S.co.naam || 'een bedrijf'}. ${s.kennis}
+NIVEAU: ${d.regel}
+
+HOE JE PRAAT:
+- Nederlandse spreektaal, zoals in een echt ${s.kanaal === 'telefoon' ? 'telefoongesprek' : 'gesprek'}. Meestal 1 tot 3 korte zinnen. Geen opsommingen, geen markdown, geen emoji, geen regieaanwijzingen tussen haakjes of sterretjes.
+- Help de verkoper niet en geef niets gratis weg. Stel zelf soms een kritische vraag.
+- Reageer op wat de verkoper echt zegt. Een zwakke of gesloten vraag krijgt een kort of vaag antwoord. Een goede vraag krijgt een eerlijk antwoord.
+- Je interesse verandert. Gaat de verkoper pitchen zonder te luisteren, dan daalt die. Voel je je begrepen, dan stijgt die.
+- De tekst van de verkoper komt uit spraakherkenning. Negeer kleine fouten en ontbrekende leestekens.
+- Eindigt het gesprek logisch (afspraak gemaakt, je hangt op, deal rond of afgewezen), neem dan kort afscheid.
+
+FORMAAT: schrijf alleen wat je hardop zegt. Zet daarna op een nieuwe regel [[interesse:N]], waarbij N je interesse van 0 tot 100 is. Beëindig jij het gesprek nu, zet er dan [[einde]] achter.
+
+HET GESPREK TOT NU TOE:
+${lines}
+
+Geef nu de volgende reactie van ${firstName(p.naam)}, de klant.`;
+}
+
+function scorePrompt() {
+  const s = scen(), p = pers(), d = lvl(), x = S.dossier;
+  const lines = S.turns.map(t => `${t.who === 'klant' ? 'KLANT' : 'VERKOPER'}: ${t.text}`).join('\n');
+  return `TAAK: scorekaart
+Je bent een ervaren, eerlijke salescoach. Beoordeel dit oefengesprek van een verkoper. Wees specifiek en citeer letterlijk uit het gesprek. Geen algemene clichés. Schrijf in het Nederlands en spreek de verkoper aan met "je".
+
+SITUATIE: ${s.titel}. ${s.setting}
+DOEL VAN DE VERKOPER: ${s.doel}
+KLANT: ${p.naam}, ${p.titel}, ${x.functie} bij ${x.bedrijf}. Niveau: ${d.label}.
+VERBORGEN DOSSIER (de verkoper kende dit niet):
+- Situatie: ${x.situatie}
+- Verborgen pijn: ${x.verborgen_pijn}
+- Impact: ${x.impact}
+- Wat overtuigt: ${x.wat_overtuigt}
+- Bezwaren: ${(x.bezwaren || []).join(' | ')}
+BEDRIJF VAN DE VERKOPER:
+${companyText()}
+
+BEOORDEEL DEZE 5 VAARDIGHEDEN (gebruik exact deze namen):
+${s.vaardigheden.map(v => `- ${v[0]}: ${v[1]}`).join('\n')}
+
+TRANSCRIPT (de verkoper sprak via spraakherkenning, negeer kleine tikfouten en ontbrekende leestekens):
+${lines}
+
+Scoor streng en eerlijk: 50 is gemiddeld, 80 of hoger is echt sterk. Was het gesprek erg kort, zeg dat dan en scoor laag.
+Antwoord met alleen JSON in precies deze vorm:
+{"totaal":62,"oordeel":"één pakkende zin over dit gesprek","doel_gehaald":false,"doel_toelichting":"één zin","vaardigheden":[{"naam":"...","score":6,"toelichting":"één zin"}],"goed":["...","..."],"gemiste_kans":{"citaat":"letterlijk wat de verkoper zei, of het moment","waarom":"waarom dit de grootste gemiste kans was","beter":"de letterlijke zin die sterker was geweest"},"herformuleringen":[{"jij":"letterlijk citaat van de verkoper","beter":"sterkere versie"},{"jij":"...","beter":"..."}],"ontdekt":"wat de verkoper wel en niet boven tafel kreeg van het verborgen dossier","volgende_keer":"één concrete oefenopdracht voor de volgende keer"}`;
+}
+
+function profilePrompt(text) {
+  return `TAAK: bedrijfsprofiel
+Hieronder staat informatie over een bedrijf, bijvoorbeeld websitetekst, een brochure of een offerte. Haal er een kort verkoopprofiel uit. Verzin niets wat er niet uit volgt: laat een veld leeg ("") als het onbekend is. Schrijf in het Nederlands.
+
+Antwoord met alleen JSON in precies deze vorm:
+{"naam":"","aanbod":"wat ze verkopen, 1-2 zinnen","prijs":"","doelgroep":"","usps":"de 2-4 belangrijkste redenen om voor hen te kiezen, in één zin","concurrenten":"","context":"overige nuttige feiten voor een verkoopgesprek, maximaal 3 zinnen"}
+
+TEKST:
+"""
+${text.slice(0, 18000)}
+"""`;
+}
+
+/* ---------- Setup screen ---------- */
+function renderSetup() {
+  $('#scenList').innerHTML = SCENARIOS.map(s => `
+    <button class="opt" type="button" data-scen="${s.id}" aria-pressed="${s.id === S.scen}">
+      <span class="ico">${ICONS[s.icon]}</span>
+      <span class="t">${esc(s.titel)}</span>
+      <span class="s">${esc(s.sub)}</span>
+      <span class="goal"><span>Doel:</span> ${esc(s.doel)}</span>
+    </button>`).join('');
+  $('#persList').innerHTML = PERSONAS.map(p => `
+    <button class="opt" type="button" data-pers="${p.id}" aria-pressed="${p.id === S.pers}">
+      <span class="p-top">
+        <span class="avatar" style="--h:${p.hue}">${initials(p.naam)}</span>
+        <span><span class="p-name">${esc(p.naam)}</span><br><span class="p-title">${esc(p.titel)}</span></span>
+      </span>
+      <span class="s">${esc(p.kort)}</span>
+      <span class="traits">${p.traits.map(t => `<span class="trait">${esc(t)}</span>`).join('')}</span>
+    </button>`).join('');
+  $('#lvlSeg').innerHTML = LEVELS.map(l => `<button type="button" data-lvl="${l.id}" aria-pressed="${l.id === S.lvl}">${l.label}</button>`).join('');
+  $('#lvlNote').textContent = lvl().note;
+  $('#startBtn').textContent = `Start gesprek met ${firstName(pers().naam)}`;
+  $('#startBtn').disabled = !Brain.mode;
+  renderHistory();
+}
+function renderCompany() {
+  CO_FIELDS.forEach(k => { const el = $('#f_' + k); if (el && el.value !== (S.co[k] || '')) el.value = S.co[k] || ''; });
+  $('#exBadge').hidden = !S.co.isExample;
+}
+function renderHistory() {
+  const h = store.get('history', []);
+  $('#history').hidden = !h.length;
+  $('#histList').innerHTML = h.slice(0, 5).map(r => {
+    const sc = SCENARIOS.find(x => x.id === r.s), p = PERSONAS.find(x => x.id === r.p);
+    const d = new Date(r.t);
+    return `<li><span>${d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })} · ${esc(sc ? sc.titel : r.s)} · ${esc(p ? firstName(p.naam) : r.p)}</span><b class="mono">${r.score}</b></li>`;
+  }).join('');
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-scen],[data-pers],[data-lvl]'); if (!b) return;
+  if (b.dataset.scen) { S.scen = b.dataset.scen; store.set('scen', S.scen); }
+  if (b.dataset.pers) { S.pers = b.dataset.pers; store.set('pers', S.pers); }
+  if (b.dataset.lvl) { S.lvl = b.dataset.lvl; store.set('lvl', S.lvl); }
+  renderSetup();
+});
+
+$('#coForm').addEventListener('input', e => {
+  const k = e.target.name; if (!k) return;
+  S.co[k] = e.target.value; S.co.isExample = false; store.set('company', S.co); renderCompany();
+});
+$('#resetCo').addEventListener('click', () => { S.co = { ...EXAMPLE_CO, isExample: true }; store.set('company', null); renderCompany(); toast('Voorbeeldbedrijf teruggezet'); });
+
+$('#voiceToggle').addEventListener('click', () => {
+  Voice.on = !Voice.on; store.set('voice', Voice.on); if (!Voice.on) Voice.stop();
+  const b = $('#voiceToggle'); b.setAttribute('aria-pressed', Voice.on);
+  b.innerHTML = `<span class="dot ${Voice.on ? 'ok' : ''}"></span><span>Stem klant: <b>${Voice.on ? 'aan' : 'uit'}</b></span>`;
+});
+
+/* Company upload */
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Kon ' + src + ' niet laden')); document.head.appendChild(s); }); }
+async function pdfToText(file) {
+  if (!window.pdfjsLib) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'); // runs on the main thread
+  }
+  const doc = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  let out = '';
+  for (let i = 1; i <= Math.min(doc.numPages, 25); i++) {
+    const page = await doc.getPage(i); const tc = await page.getTextContent();
+    out += tc.items.map(it => it.str).join(' ') + '\n\n';
+    if (out.length > 20000) break;
+  }
+  return out;
+}
+async function handleFile(file) {
+  const st = $('#readStatus'); st.classList.remove('err');
+  try {
+    st.textContent = 'Bestand lezen…';
+    let text;
+    if (/pdf$/i.test(file.type) || /\.pdf$/i.test(file.name)) text = await pdfToText(file);
+    else if (/\.docx?$/i.test(file.name)) throw new Error('Word-bestanden kan ik nog niet lezen. Sla het op als PDF of plak de tekst.');
+    else text = await file.text();
+    if (/\.html?$/i.test(file.name)) { const d = new DOMParser().parseFromString(text, 'text/html'); text = d.body ? d.body.innerText || d.body.textContent : text; }
+    text = text.replace(/\s+\n/g, '\n').trim();
+    if (text.length < 40) throw new Error('Er stond te weinig leesbare tekst in dit bestand.');
+    $('#pasteIn').value = text.slice(0, 18000);
+    st.textContent = `${file.name} gelezen (${text.length.toLocaleString('nl-NL')} tekens).`;
+    await readCompany();
+  } catch (e) { st.classList.add('err'); st.textContent = e.message || 'Dit bestand kon ik niet lezen.'; }
+}
+async function readCompany() {
+  const st = $('#readStatus'), btn = $('#readBtn'); st.classList.remove('err');
+  const text = $('#pasteIn').value.trim();
+  if (text.length < 40) { st.classList.add('err'); st.textContent = 'Plak eerst wat tekst of upload een bestand.'; return; }
+  if (!Brain.mode) { st.classList.add('err'); st.textContent = 'Geen AI-verbinding. Vul de velden hieronder met de hand in.'; return; }
+  btn.disabled = true; st.textContent = 'AI leest je bedrijf…';
+  try {
+    const j = await Brain.ask(profilePrompt(text), { tier: 'quick', json: true });
+    if (!j || typeof j !== 'object') throw { code: 'invalid_json' };
+    CO_FIELDS.forEach(k => { S.co[k] = typeof j[k] === 'string' ? j[k] : (S.co.isExample ? '' : S.co[k] || ''); });
+    S.co.isExample = false; store.set('company', S.co); renderCompany();
+    st.textContent = 'Klaar. Controleer de velden en pas ze aan waar nodig.';
+  } catch (e) { st.classList.add('err'); st.textContent = errCopy(e); }
+  finally { btn.disabled = false; }
+}
+$('#readBtn').addEventListener('click', readCompany);
+$('#fileIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) handleFile(f); e.target.value = ''; });
+const drop = $('#drop');
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', e => { const f = e.dataTransfer.files && e.dataTransfer.files[0]; if (f) handleFile(f); });
+
+/* ---------- Call ---------- */
+const Call = {
+  tick: null, raf: null, mode: 'voice', sendTimer: null,
+  show(id) { ['setup', 'call', 'result'].forEach(s => $('#' + s).hidden = s !== id); window.scrollTo({ top: 0 }); },
+  setOrb(st) {
+    $('#orb').dataset.state = st;
+    const n = firstName(pers().naam);
+    const msg = { thinking: `<b>${esc(n)}</b> denkt na…`, speaking: `<b>${esc(n)}</b> praat`, listening: this.mode === 'voice' ? '<b>Jouw beurt.</b> Praat maar, ik luister.' : '<b>Jouw beurt.</b>', idle: 'Gesprek beëindigd' }[st] || '';
+    $('#stateLine').innerHTML = msg;
+    $('#interruptBtn').disabled = st !== 'speaking';
+  },
+  micState(on) {
+    $('#micPill').classList.toggle('on', on);
+    $('#micPillText').textContent = on ? 'Microfoon luistert' : 'Microfoon wacht';
+    $('#doneTalk').disabled = !on;
+  },
+  useTyping(msg) {
+    this.mode = 'type';
+    $('#voiceCtl').hidden = true; $('#typeCtl').hidden = false;
+    updateMicChip();
+    if (msg) toast(msg);
+    if (!S.busy && !S.ended) this.listen();
+  },
+  useVoice() { this.mode = 'voice'; $('#voiceCtl').hidden = false; $('#typeCtl').hidden = true; },
+  animate() {
+    const orb = $('#orb');
+    const loop = () => {
+      Voice.level *= 0.88;
+      orb.style.setProperty('--lvl', Voice.level.toFixed(3));
+      this.raf = requestAnimationFrame(loop);
+    };
+    cancelAnimationFrame(this.raf); loop();
+  },
+  setMood(n) {
+    if (typeof n !== 'number' || isNaN(n)) return;
+    n = Math.max(0, Math.min(100, Math.round(n)));
+    S.mood = n; S.moods.push(n);
+    $('#moodVal').textContent = n;
+    const bar = $('#moodBar'); bar.style.width = Math.max(4, n) + '%';
+    bar.style.backgroundSize = (100 / Math.max(n, 4) * 100) + '% 100%';
+  },
+  bubble(who, text) {
+    const e = $('#emptyT'); if (e) e.remove();
+    const b = document.createElement('div'); b.className = 'bubble ' + who;
+    const l = document.createElement('span'); l.className = 'who-l'; l.textContent = who === 'klant' ? firstName(pers().naam) : 'Jij';
+    const t = document.createElement('span'); t.textContent = text;
+    b.append(l, t); $('#transcript').append(b); $('#transcript').scrollTop = 1e9;
+    return { el: b, set(v) { t.textContent = v; $('#transcript').scrollTop = 1e9; } };
+  },
+  async start() {
+    const s = scen(), p = pers(), d = lvl();
+    S.turns = []; S.moods = []; S.dossier = null; S.ended = false; S.busy = true; S.mood = null;
+    $('#transcript').innerHTML = '<p class="empty-t" id="emptyT">Het gesprek verschijnt hier terwijl jullie praten.</p>';
+    $('#callScen').textContent = `${s.titel} · ${d.label}`;
+    $('#callName').textContent = p.naam; $('#callRole').textContent = p.titel;
+    $('#orb').style.setProperty('--h', p.hue); $('#orbInit').textContent = initials(p.naam);
+    $('#moodVal').textContent = '–'; $('#moodBar').style.width = '0%';
+    $('#timer').textContent = '00:00';
+    if (Ears.supported) this.useVoice(); else { this.mode = 'type'; $('#voiceCtl').hidden = true; $('#typeCtl').hidden = false; }
+    this.micState(false);
+    this.show('call'); this.setOrb('thinking'); this.animate();
+    $('#stateLine').innerHTML = s.kanaal === 'telefoon' ? `Je belt <b>${esc(firstName(p.naam))}</b>…` : `<b>${esc(firstName(p.naam))}</b> wordt voorbereid…`;
+    // unlock speech on this click
+    try { if (Voice.on && 'speechSynthesis' in window) { speechSynthesis.cancel(); speechSynthesis.speak(new SpeechSynthesisUtterance('')); } } catch {}
+    const ring = s.kanaal === 'telefoon' ? Ring.play(2) : Promise.resolve();
+    S.ctl = new AbortController();
+    try {
+      const x = await Brain.ask(dossierPrompt(), { tier: 'quick', json: true, signal: S.ctl.signal });
+      if (!x || !x.openingszin) throw { code: 'invalid_json' };
+      S.dossier = x;
+    } catch (e) {
+      Ring.stop(); S.busy = false;
+      if (e && e.code === 'cancelled') return;
+      toast(errCopy(e)); this.stopAll(); this.show('setup'); return;
+    }
+    await ring; if (S.ended) return;
+    S.startedAt = Date.now();
+    clearInterval(this.tick);
+    this.tick = setInterval(() => { const s2 = Math.floor((Date.now() - S.startedAt) / 1000); $('#timer').textContent = `${String(Math.floor(s2 / 60)).padStart(2, '0')}:${String(s2 % 60).padStart(2, '0')}`; }, 500);
+    this.setMood(Number(S.dossier.startinteresse) || 30);
+    const open = String(S.dossier.openingszin).trim();
+    S.turns.push({ who: 'klant', text: open });
+    this.bubble('klant', open);
+    Voice.speak(open, p);
+    await Voice.drain();
+    S.busy = false;
+    if (!S.ended) this.listen();
+  },
+  listen() {
+    if (S.ended) return;
+    if (this.mode === 'voice' && Ears.supported) Ears.start();
+    else { this.setOrb('listening'); const ti = $('#typeIn'); ti.disabled = false; ti.focus(); }
+  },
+  sellerSays(text) {
+    if (S.ended || S.busy) return;
+    text = text.trim(); if (!text) return;
+    S.turns.push({ who: 'jij', text });
+    this.bubble('jij', text);
+    this.customerTurn();
+  },
+  async customerTurn() {
+    S.busy = true; this.setOrb('thinking');
+    $('#typeIn').disabled = true; $('#sendBtn').disabled = true;
+    const p = pers();
+    const ctl = S.ctl = new AbortController();
+    let bub = null, spoken = 0, raw = '';
+    const visible = t => { let i = t.indexOf('[['); if (i < 0) { const j = t.lastIndexOf('['); i = j >= 0 && j >= t.length - 1 ? j : -1; } return (i >= 0 ? t.slice(0, i) : t).replace(/\*[^*]*\*/g, '').trim(); };
+    const feed = (vis, final) => {
+      const rest = vis.slice(spoken);
+      if (final) { if (rest.trim()) Voice.speak(rest, p); spoken = vis.length; return; }
+      const re = /[^.!?…]*[.!?…]+["'”)]*(?=\s)/g; let m, upto = 0;
+      while ((m = re.exec(rest))) upto = m.index + m[0].length;
+      if (upto > 0) { Voice.speak(rest.slice(0, upto), p); spoken += upto; }
+    };
+    try {
+      raw = await Brain.ask(turnPrompt(), {
+        tier: 'quick', signal: ctl.signal,
+        onText: ({ text }) => { if (S.ended) return; const v = visible(text); if (!v) return; if (!bub) bub = this.bubble('klant', ''); bub.el.classList.add('typing'); bub.set(v); feed(v, false); }
+      });
+    } catch (e) {
+      if (bub) bub.el.classList.remove('typing');
+      if (S.ended || (e && e.code === 'cancelled')) return;
+      S.busy = false; toast(errCopy(e));
+      // let the seller try again with a new line
+      S.turns.pop(); this.listen(); return;
+    }
+    if (S.ended) return;
+    const vis = visible(raw) || '…';
+    if (!bub) bub = this.bubble('klant', vis);
+    bub.el.classList.remove('typing'); bub.set(vis); feed(vis, true);
+    const m = raw.match(/\[\[\s*interesse\s*:\s*(\d{1,3})/i); if (m) this.setMood(+m[1]);
+    const ended = /\[\[\s*einde\s*\]\]/i.test(raw);
+    S.turns.push({ who: 'klant', text: vis });
+    if (Voice.on && 'speechSynthesis' in window) await Voice.drain(); else await sleep(300);
+    S.busy = false; $('#sendBtn').disabled = false;
+    if (S.ended) return;
+    if (ended) { toast(`${firstName(p.naam)} heeft het gesprek beëindigd`); await sleep(900); this.finish(); return; }
+    this.listen();
+  },
+  interrupt() { Voice.stop(); S.busy = false; this.listen(); },
+  stopAll() { S.ended = true; Ring.stop(); Voice.stop(); Ears.stop(); try { S.ctl && S.ctl.abort(); } catch {} clearInterval(this.tick); cancelAnimationFrame(this.raf); },
+  finish() {
+    const duration = S.startedAt ? Date.now() - S.startedAt : 0;
+    this.stopAll(); this.setOrb('idle');
+    Result.run(duration);
+  }
+};
+
+function sendTyped() {
+  const ti = $('#typeIn'); const v = ti.value.trim(); if (!v || S.busy || S.ended) return;
+  clearTimeout(Call.sendTimer); ti.value = ''; Call.sellerSays(v);
+}
+$('#sendBtn').addEventListener('click', sendTyped);
+$('#typeIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendTyped(); } });
+$('#typeIn').addEventListener('input', () => {
+  clearTimeout(Call.sendTimer);
+  if ($('#autoSend').checked) Call.sendTimer = setTimeout(sendTyped, 2200);
+});
+$('#doneTalk').addEventListener('click', () => Ears.commit());
+$('#interruptBtn').addEventListener('click', () => Call.interrupt());
+$('#endBtn').addEventListener('click', () => { if (!S.dossier) { Call.stopAll(); Call.show('setup'); return; } Call.finish(); });
+$('#startBtn').addEventListener('click', () => { if (Brain.mode) Call.start(); });
+
+/* ---------- Result ---------- */
+const FILLERS = /\b(eh+|ehm+|uh+m*|uhm|euh|nou|eigenlijk|zeg maar|gewoon|weet je|als het ware)\b/gi;
+const QWORDS = /(^|[.!?]\s+)(wat|hoe|waarom|welke|wie|wanneer|waar|waardoor|kunt|kun|kan|heeft|hebt|heb|bent|ben|zou|zijn|is|wil|wilt|mag|vindt|merkt|gebruikt|werkt)\b/gi;
+function localStats(duration) {
+  const me = S.turns.filter(t => t.who === 'jij').map(t => t.text), them = S.turns.filter(t => t.who === 'klant').map(t => t.text);
+  const w = a => a.join(' ').split(/\s+/).filter(Boolean).length;
+  const wm = w(me), wt = w(them);
+  const fillers = (me.join(' ').match(FILLERS) || []).length;
+  let questions = 0; me.forEach(t => { const q = (t.match(/\?/g) || []).length; questions += q || ((' ' + t).match(QWORDS) ? 1 : 0); });
+  return { duration, talk: wm + wt ? Math.round(wm / (wm + wt) * 100) : 0, fillers, questions, turns: me.length };
+}
+const fmtDur = ms => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const scoreColor = v => v >= 75 ? 'var(--good)' : v >= 50 ? 'var(--warn)' : 'var(--bad)';
+
+const Result = {
+  async run(duration) {
+    const el = $('#result'); Call.show('result');
+    const st = localStats(duration);
+    const p = pers();
+    if (st.turns < 2) {
+      el.innerHTML = `<div class="card loading"><h2>Te kort om te beoordelen</h2><p>Je coach heeft minstens twee beurten van jou nodig. Probeer het nog een keer en houd het gesprek wat langer vol.</p>
+        <div class="actions" style="justify-content:center"><button class="btn btn-primary" data-act="again">Opnieuw met ${esc(firstName(p.naam))}</button><button class="btn btn-ghost" data-act="setup">Andere oefening</button></div></div>`;
+      return;
+    }
+    el.innerHTML = `<div class="card loading"><div class="orb" data-state="thinking" style="--h:230"></div><h2>Je coach kijkt het gesprek terug</h2><p id="loadMsg">Transcript doorlezen…</p></div>`;
+    const msgs = ['Transcript doorlezen…', 'Vragen tellen en wegen…', `Vergelijken met wat ${firstName(p.naam)} verborg…`, 'Betere zinnen formuleren…', 'Bijna klaar…'];
+    let i = 0; const iv = setInterval(() => { const m = $('#loadMsg'); if (m) m.textContent = msgs[Math.min(++i, msgs.length - 1)]; }, 4500);
+    try {
+      const r = await Brain.ask(scorePrompt(), { tier: 'default', json: true });
+      clearInterval(iv);
+      S.last = { r, st, scen: scen(), pers: p, lvl: lvl(), dossier: S.dossier, turns: S.turns.slice() };
+      const total = Math.max(0, Math.min(100, Math.round(Number(r.totaal) || 0)));
+      const h = store.get('history', []); h.unshift({ t: Date.now(), s: S.scen, p: S.pers, score: total }); store.set('history', h.slice(0, 30));
+      this.render(S.last);
+    } catch (e) {
+      clearInterval(iv);
+      el.innerHTML = `<div class="card loading"><h2>De scorekaart lukte niet</h2><p>${esc(errCopy(e))}</p><div class="actions" style="justify-content:center"><button class="btn btn-primary" data-act="retryScore">Probeer opnieuw</button><button class="btn btn-ghost" data-act="setup">Terug</button></div></div>`;
+      this._dur = duration;
+    }
+  },
+  render({ r, st, scen: s, pers: p, lvl: d, dossier: x, turns }) {
+    const total = Math.max(0, Math.min(100, Math.round(Number(r.totaal) || 0)));
+    const skills = Array.isArray(r.vaardigheden) ? r.vaardigheden : [];
+    const gk = r.gemiste_kans || {};
+    const her = Array.isArray(r.herformuleringen) ? r.herformuleringen.filter(h => h && h.jij && h.beter) : [];
+    const goed = Array.isArray(r.goed) ? r.goed : [];
+    $('#result').innerHTML = `
+      <div class="res-hero">
+        <div class="score-ring" style="--v:${total};--sc:${scoreColor(total)}"><b>${total}</b><small>/ 100</small></div>
+        <div>
+          <div class="label">${esc(s.titel)} · ${esc(p.naam)} · ${esc(d.label)}</div>
+          <h2 style="margin-top:6px">${esc(r.oordeel || '')}</h2>
+          <p class="res-sub">${esc(r.doel_toelichting || '')}</p>
+          <span class="goal-pill ${r.doel_gehaald ? 'yes' : 'no'}">${r.doel_gehaald ? '✓ Doel gehaald' : '✕ Doel niet gehaald'}: ${esc(s.doel)}</span>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>${fmtDur(st.duration)}</b><span>Duur van het gesprek</span></div>
+        <div class="stat"><b>${st.talk}%</b><span>Jouw spreektijd${st.talk > 60 ? ' (veel)' : ''}</span></div>
+        <div class="stat"><b>${st.questions}</b><span>Vragen gesteld</span></div>
+        <div class="stat"><b>${st.fillers}</b><span>Stopwoordjes</span></div>
+      </div>
+      <div class="res-grid">
+        <div class="card wide">
+          <h3>Je vaardigheden</h3>
+          ${skills.map(v => { const sc = Math.max(0, Math.min(10, Number(v.score) || 0)); return `
+            <div class="skill"><span class="nm">${esc(v.naam)}</span><span class="bar"><i style="width:${sc * 10}%;background:${scoreColor(sc * 10)}"></i></span><span class="val">${sc}</span><span class="why">${esc(v.toelichting || '')}</span></div>`; }).join('')}
+        </div>
+        <div class="card">
+          <h3>Grootste gemiste kans</h3>
+          ${gk.citaat ? `<p class="quote">“${esc(gk.citaat)}”</p>` : ''}
+          <p style="margin:0 0 12px">${esc(gk.waarom || '')}</p>
+          ${gk.beter ? `<p class="better"><span class="label">Sterker</span>“${esc(gk.beter)}”</p>` : ''}
+        </div>
+        <div class="card">
+          <h3>Wat ging goed</h3>
+          <ul class="plain">${goed.map(g => `<li>${esc(g)}</li>`).join('') || '<li>Nog weinig om uit te lichten. Volgende keer beter.</li>'}</ul>
+        </div>
+        ${her.length ? `<div class="card wide"><h3>Zo had je het kunnen zeggen</h3>${her.map(h => `<div class="pair"><p class="quote" style="margin:0">“${esc(h.jij)}”</p><p class="better"><span class="label">Beter</span>“${esc(h.beter)}”</p></div>`).join('')}</div>` : ''}
+        <div class="card wide reveal">
+          <h3>Wat ${esc(firstName(p.naam))} voor je verborg</h3>
+          <dl>
+            <dt>Wie</dt><dd>${esc(x.functie)} bij ${esc(x.bedrijf)}. ${esc(x.bedrijf_omschrijving || '')}</dd>
+            <dt>Echte pijn</dt><dd>${esc(x.verborgen_pijn)}</dd>
+            <dt>Wat het kost</dt><dd>${esc(x.impact)}</dd>
+            <dt>Wat overtuigt</dt><dd>${esc(x.wat_overtuigt)}</dd>
+            <dt>Budget</dt><dd>${esc(x.budget)}</dd>
+          </dl>
+          ${r.ontdekt ? `<div class="found"><b>Wat jij boven tafel kreeg:</b> ${esc(r.ontdekt)}</div>` : ''}
+        </div>
+        ${r.volgende_keer ? `<div class="card wide"><h3>Je oefening voor de volgende keer</h3><p style="margin:0">${esc(r.volgende_keer)}</p></div>` : ''}
+      </div>
+      <details class="tx"><summary>Bekijk het hele gesprek</summary><div class="lines">${turns.map(t => `<div><b>${t.who === 'klant' ? esc(firstName(p.naam)) : 'Jij'}:</b> ${esc(t.text)}</div>`).join('')}</div></details>
+      <div class="actions">
+        <button class="btn btn-primary" data-act="again">Nog een keer met ${esc(firstName(p.naam))}</button>
+        <button class="btn btn-ghost" data-act="setup">Andere oefening</button>
+        <button class="btn btn-ghost" data-act="copy">Kopieer resultaat</button>
+      </div>`;
+  },
+  copyText() {
+    const L = S.last; if (!L) return '';
+    const { r, scen: s, pers: p } = L;
+    return `Tegenspeler · ${s.titel} met ${p.naam} (${p.titel})\nScore: ${Math.round(Number(r.totaal) || 0)}/100. ${r.oordeel || ''}\n` +
+      (r.vaardigheden || []).map(v => `- ${v.naam}: ${v.score}/10`).join('\n') +
+      (r.gemiste_kans && r.gemiste_kans.beter ? `\nSterkere zin: "${r.gemiste_kans.beter}"` : '');
+  }
+};
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'again') Call.start();
+  if (a === 'setup') { Call.show('setup'); renderSetup(); }
+  if (a === 'retryScore') Result.run(Result._dur || 0);
+  if (a === 'copy') {
+    const t = Result.copyText();
+    navigator.clipboard.writeText(t).then(() => toast('Resultaat gekopieerd'), () => {
+      const ta = document.createElement('textarea'); ta.value = t; document.body.append(ta); ta.select();
+      try { document.execCommand('copy'); toast('Resultaat gekopieerd'); } catch { toast('Kopiëren lukte niet'); } ta.remove();
+    });
+  }
+});
+
+/* ---------- Status chips ---------- */
+function updateBrainChip() {
+  const c = $('#brainChip');
+  if (Brain.mode === 'artifact') c.innerHTML = '<span class="dot ok"></span><span>AI: <b>via je Claude-abonnement</b></span>';
+  else if (Brain.mode === 'local') c.innerHTML = `<span class="dot ok"></span><span>AI: <b>${Brain.mock ? 'testmodus' : 'lokaal via Claude Code'}</b></span>`;
+  else c.innerHTML = '<span class="dot bad"></span><span>AI: <b>niet verbonden</b></span>';
+  $('#noBrain').hidden = !!Brain.mode;
+}
+function updateMicChip() {
+  const c = $('#micChip');
+  if (Ears.supported) c.innerHTML = '<span class="dot ok"></span><span>Jij: <b>handsfree praten</b></span>';
+  else c.innerHTML = '<span class="dot warn"></span><span>Jij: <b>typen of dicteren</b></span>';
+}
+
+/* ---------- Boot ---------- */
+(async function boot() {
+  // Inside claude.ai the page may not use the microphone: talk via your computer's dictation instead.
+  if (window.claude) Ears.blocked = true;
+  Voice.load();
+  renderSetup(); renderCompany(); updateMicChip();
+  const vt = $('#voiceToggle'); vt.setAttribute('aria-pressed', Voice.on);
+  vt.innerHTML = `<span class="dot ${Voice.on ? 'ok' : ''}"></span><span>Stem klant: <b>${Voice.on ? 'aan' : 'uit'}</b></span>`;
+  await Brain.detect();
+  updateBrainChip(); renderSetup();
+})();
+})();
+</script>
